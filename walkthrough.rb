@@ -5,6 +5,7 @@ module BldgtypExampleLibraryWalkthrough
 
   def checked(outcome)
     raise "Public operation failed: #{outcome.fetch('code')}" unless outcome.fetch("code") == "ok"
+
     outcome.fetch("value")
   end
 
@@ -12,27 +13,31 @@ module BldgtypExampleLibraryWalkthrough
     api = PhComposer::API
     session = api.discover.fetch("sessions").find { |row| row.fetch("active") }
     raise "Open a synthetic Model first." unless session
-    context = api.connect(:session_id => session.fetch("id"), :capabilities => %w[read view model_write])
+
+    context = api.connect(:session_id => session.fetch("id"), :capabilities => %w[read view model_write setup])
     provider_id = "bldgtyp.example_library.materials"
-    loaded = checked(api.view(:context => context, :name => "ph_composer.library.load",
-                              :params => { "provider_id" => provider_id, "kind" => "materials" }))
+    loaded = checked(api.setup(:context => context, :name => "ph_composer.library.load",
+                               :params => { "provider_id" => provider_id, "kind" => "materials" }))
     selected = { "provider_id" => provider_id, "kind" => "materials", "generation" => loaded.fetch("generation") }
     catalog = checked(api.query(:context => context, :name => "ph_composer.library.catalog", :params => selected))
     raise "The example catalog has warnings or unavailable kinds." unless catalog.fetch("warnings").empty? &&
-                                                                        catalog.fetch("unavailable").empty?
+                                                                          catalog.fetch("unavailable").empty?
+
     row = catalog.fetch("rows").find { |entry| entry.fetch("record_id") == "insulation" }
     raise "The example catalog is unavailable." unless row
-    params = selected.merge("library_id" => row.fetch("library_id"), "record_id" => row.fetch("record_id"),
-                            "choice" => "inspect")
-    preview = api.preview(:context => context, :name => "ph_composer.library.copy", :params => params)
-    resolution = checked(preview).fetch("resolution").fetch("outcome")
+
+    in_file = checked(api.query(:context => context, :name => "ph_composer.library.in_file", :params => selected))
+    resolution = in_file.fetch("rows").find { |entry| entry.fetch("record_id") == "insulation" }
+                        .fetch("resolution").fetch("outcome")
     raise "Resolve the existing local record before running the example." unless %w[create reuse].include?(resolution)
-    params["choice"] = resolution == "create" ? "create" : "keep_local"
+
+    params = selected.merge("library_id" => row.fetch("library_id"), "record_id" => row.fetch("record_id"),
+                            "choice" => resolution == "create" ? "create" : "keep_local")
     preview = api.preview(:context => context, :name => "ph_composer.library.copy", :params => params)
     checked(preview)
     result = api.invoke(:context => context, :name => "ph_composer.library.copy", :params => params,
-      :request => { "sequence" => 1, "expected_revision" => preview.fetch("revision"),
-                    "proposal_digest" => preview.fetch("proposal_digest") })
+                        :request => { "sequence" => 1, "expected_revision" => preview.fetch("revision"),
+                                      "proposal_digest" => preview.fetch("proposal_digest") })
     copied = checked(result)
     inventory = checked(api.query(:context => context, :name => "ph_composer.assemblies.materials.all"))
     local = inventory.fetch("records").find { |entry| entry.fetch("id") == copied.fetch("local_id") }
