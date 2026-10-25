@@ -6,7 +6,7 @@ The provider needs no account, network connection or PH-Composer source changes.
 
 Requires a PH-Composer development build with the Library and Assemblies features and contract
 version 1. This example uses the Phase 2 Library API, currently under development in
-[PH-Composer](https://github.com/bldgtyp/ph-composer). The Ruby source is compatible with Ruby 2.7.
+[PH-Composer](https://github.com/ph-composer/ph-composer-skp). The Ruby source is compatible with Ruby 2.7.
 This repository does not establish a public
 SketchUp support or extension-release claim.
 
