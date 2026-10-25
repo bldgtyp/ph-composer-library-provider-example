@@ -5,7 +5,7 @@ public provider contract. The values illustrate the contract and are not product
 The provider needs no account, network connection or PH-Composer source changes.
 
 Requires a PH-Composer development build with the Library and Assemblies features and contract
-version 1. This example uses the Phase 2 Library API, currently under development in
+version 1. This example uses the Library API under development in
 [PH-Composer](https://github.com/ph-composer/ph-composer-skp). The Ruby source is compatible with Ruby 2.7.
 This repository does not establish a public
 SketchUp support or extension-release claim.
@@ -36,7 +36,8 @@ proof = BldgtypExampleLibraryWalkthrough.run
 raise "Example failed" unless proof.fetch("passed")
 ```
 
-The walkthrough connects to the active Model with explicit grants, loads and lists the provider,
+The walkthrough connects to the active Model with explicit grants, loads the provider through
+the setup API and lists its records,
 previews and applies one Material copy using the revision and proposal digest, then reads it
 back. The first copy is one Model operation. An unchanged prior copy is reused without a write;
 a conflicting local record requires review before the script proceeds. The copied record remains
